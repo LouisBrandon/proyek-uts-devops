@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple User Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; }
+    input, button { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; width: 60%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>📋 User Manager</h1>
+
+  <div>
+    <input id="name" placeholder="Name" />
+    <input id="email" placeholder="Email" />
+    <button onclick="addUser()">Add</button>
+    <button onclick="updateUser()">Update</button>
+    <input id="updateId" placeholder="User ID for update" style="width:120px;">
+  </div>
+
+  <table id="userTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Email</th><th>Actions</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const apiUrl = '/users';
+
+    async function loadUsers() {
+      const res = await fetch(apiUrl);
+      const users = await res.json();
+      const tbody = document.querySelector('#userTable tbody');
+      tbody.innerHTML = '';
+      users.forEach(u => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.name}</td>
+            <td>${u.email}</td>
+            <td>
+              <button onclick="fillForm(${u.id}, '${u.name}', '${u.email}')">✏️</button>
+              <button onclick="deleteUser(${u.id})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function addUser() {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+      loadUsers();
+    }
+
+    async function updateUser() {
+      const id = document.getElementById('updateId').value;
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      await fetch(`${apiUrl}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+      loadUsers();
+    }
+
+    async function deleteUser(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      loadUsers();
+    }
+
+    function fillForm(id, name, email) {
+      document.getElementById('updateId').value = id;
+      document.getElementById('name').value = name;
+      document.getElementById('email').value = email;
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
