@@ -1,0 +1,25 @@
+name: CI-CD Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Docker Login
+      run: echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+    - name: Build Image
+      run: docker build -t username/simple-db-app:latest .
+
+    - name: Push Image
+      run: docker push username/simple-db-app:latest
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl set image deployment/node-app node-app=username/simple-db-app:latest
